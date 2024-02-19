@@ -1,10 +1,11 @@
 require('dotenv').config();
-const express = require('express');
 const cors = require('cors');
+const express = require('express');
+const fs = require('fs');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
+const http = require('http');
 const nodemailer = require('nodemailer');
-
+const rateLimit = require('express-rate-limit');
 const app = express();
 
 //nodemailer transporter
@@ -24,8 +25,9 @@ const limiter = rateLimit({
 
 //only authorize POST from react
 const corsOption= {
-  origin: process.env.CLIENT_URL_DEV,
-  methods: 'POST',
+  //url of client, not gateway
+  origin: process.env.CLIENT_URL_PROD,
+  methods: 'POST, GET',
   optionsSuccessStatus: 204,
 };
 
@@ -70,5 +72,18 @@ app.post('/contact', (req, res) => {
   });
 });
 
+// Middleware for logging incoming requests
+app.use((req, res, next) => {
+  console.log(`Received a ${req.method} request to ${req.path}`);
+  next(); // Pass control to the next middleware or route handler
+});
+
+// Route for handling GET requests
+app.get('/contact', (req, res) => {
+  res.send('Hello, this is a test endpoint!');
+});
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`listening on port ${PORT}`));
+http
+  .createServer(app)
+  .listen(PORT, () => console.log(`listening on port ${PORT}`));
